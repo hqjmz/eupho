@@ -1,0 +1,34 @@
+version: 1
+
+state_root: /absolute/admin-owned/path/eupho/state
+workspace_root: /absolute/admin-owned/path/eupho/workspaces
+
+metadata_signing:
+  current_key_id: 2026-08-a
+  key_file: /absolute/admin-owned/path/eupho/keys/metadata-hmac.key
+  verification_key_files: {}
+
+github_app:
+  app_id: 123456
+  private_key_file: /absolute/admin-owned/path/eupho/keys/github-app.pem
+
+sandbox_profiles:
+  hardened-container:
+    backend: container
+    network: deny_by_default
+    runner_state_access: none
+    shared_git_admin: false
+
+workspace_profiles:
+  ephemeral_clone:
+    shared_objects: false
+    authenticated_remote: false
+
+price_table_profiles:
+  standard: /absolute/admin-owned/path/eupho/model-prices.yml
+
+notification_sinks:
+  local-desktop:
+    argv:
+      - /absolute/admin-owned/path/eupho/notify
+    timeout_seconds: 10

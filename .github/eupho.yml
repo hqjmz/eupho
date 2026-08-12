@@ -1,0 +1,105 @@
+version: 1
+
+base_branch: main
+concurrency: 2
+poll_interval_seconds: 15
+merge_policy: human-final-approval
+
+execution:
+  default_mode: attended
+  attended:
+    workspace: worktree
+    native_permission_prompts: true
+    sandbox_profile: optional
+  unattended:
+    workspace: ephemeral_clone
+    native_permission_prompts: false
+    sandbox_profile: hardened-container
+
+github_app:
+  slug: eupho
+  required_check_source: eupho
+
+labels:
+  ready: agent:ready
+  working: agent:wip
+  review: in-review
+  human: needs-human
+
+routing:
+  autonomous_classes:
+    - label: agent:risk:docs-only
+      execution_mode: unattended
+      allowed_paths:
+        - docs/**
+        - "**/*.md"
+
+branches:
+  pattern: agent/issue-{issue_number}-{run_id_short}
+  merge_method: squash
+  require_up_to_date: true
+  dismiss_stale_approvals: true
+  merge_queue: false
+
+runners:
+  author:
+    adapter: claude
+    profile: default-author
+  reviewer:
+    adapter: codex
+    profile: read-only-reviewer
+    require_independent_context: true
+
+limits:
+  author_minutes: 45
+  review_minutes: 15
+  repair_cycles: 3
+  model_turns_per_phase: 25
+  model_tokens_per_run: 150000
+  model_cost_usd_per_run: "8.00"
+  model_cost_usd_per_repo_day: "25.00"
+  price_table_profile: standard
+  max_changed_files: 40
+  max_diff_lines: 2000
+
+review:
+  required_check: agent-review
+  blocking_severities:
+    - blocking
+    - major
+  always_blocking_categories:
+    - weakened_or_deleted_tests
+  base_drift_policy: full_rereview
+  advisory_hosted_reviews: false
+  enable_auto_merge: true
+
+validation:
+  commands:
+    - name: test
+      argv:
+        - npm
+        - test
+    - name: typecheck
+      argv:
+        - npm
+        - run
+        - typecheck
+
+policy:
+  protected_paths:
+    - .github/eupho.yml
+    - .github/workflows/**
+    - AGENTS.md
+    - CLAUDE.md
+    - CODEOWNERS
+    - deployment/**
+    - infrastructure/**
+
+notifications:
+  events:
+    - awaiting_approval
+    - needs_human
+    - failed
+    - merged
+  sinks:
+    - local-desktop
