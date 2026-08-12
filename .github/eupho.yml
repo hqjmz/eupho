@@ -77,13 +77,18 @@ validation:
   commands:
     - name: test
       argv:
-        - npm
+        - cargo
         - test
-    - name: typecheck
+        - --all-targets
+    - name: lint
       argv:
-        - npm
-        - run
-        - typecheck
+        - cargo
+        - clippy
+        - --all-targets
+        - --all-features
+        - --
+        - -D
+        - warnings
 
 policy:
   protected_paths:

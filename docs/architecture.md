@@ -4,15 +4,20 @@ Eupho uses a ports-and-adapters structure so orchestration policy does not depen
 
 ```text
 src/
-  cli/        command parsing, rendering, doctor and observe-only application flows
-  config/     repository policy and administrator configuration
-  domain/     run record, state machine, and issue routing
-  github/     read-only GitHub port and gh-backed adapter
-  infra/      atomic storage, run store, and repository process lock
-  runner/     product-neutral author/reviewer contracts
-  security/   canonical JSON, HMAC envelopes, and revision high-water marks
-  workspace/  attended-worktree and unattended-clone contracts
+  main.rs          command parsing and rendering
+  application.rs   doctor, policy resolution, observe-once, and status flows
+  config.rs        repository policy and administrator configuration
+  domain.rs        run record, state machine, and issue routing
+  github.rs        read-only GitHub port and gh-backed adapter
+  infra.rs         atomic storage, run store, state-root safety, and OS locks
+  instructions.rs  safe AGENTS.md / CLAUDE.md link management
+  runner.rs        product-neutral runner port
+  security.rs      canonical JSON, HMAC envelopes, and revision guards
+  workspace.rs     attended-worktree and unattended-clone port
 ```
+
+The backend is a single Rust binary. External programs are always launched with
+argument arrays; repository and GitHub text is treated as untrusted data.
 
 ## Phase 1 boundary
 
@@ -20,7 +25,7 @@ Phase 1 is deliberately read-only with respect to GitHub. `once` discovers issue
 
 `doctor` has two levels:
 
-- local checks validate Node, Git, GitHub CLI availability, repository policy, and optional host configuration;
+- local checks validate the Eupho build, Git, GitHub CLI availability, repository policy, and optional host configuration;
 - `doctor --repo` performs strict GitHub checks using `EUPHO_DOCTOR_TOKEN`, an operator credential separate from the runtime App. It checks the ready label, strict required checks, expected App source, and stale-approval dismissal where applicable.
 
 ## Next implementation slice

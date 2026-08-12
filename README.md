@@ -12,13 +12,14 @@ This repository currently implements the Phase 1 observe-only spine:
 - runner and workspace ports for later adapters;
 - a `doctor` command for local and optional GitHub policy checks;
 - a read-only `once` command that discovers ready issues and prints the actions Eupho would take;
-- a `status` command for durable local runs.
+- a `status` command for durable local runs;
+- an `instructions link` command for safely sharing one instruction file between Claude Code and Codex.
 
 Phase 1 never claims issues, changes labels, creates branches, or writes to GitHub.
 
 ## Requirements
 
-- Node.js 22 or newer
+- Rust 1.85 or newer
 - Git
 - GitHub CLI (`gh`) for GitHub-backed commands
 - A GitHub operator token in `EUPHO_DOCTOR_TOKEN` only when running strict branch-protection diagnostics
@@ -30,27 +31,39 @@ Without a host configuration, observe-only snapshots use the OS user-state direc
 ## Quick start
 
 ```bash
-npm install
-npm run check
-npm run build
-node dist/src/cli.js doctor
+cargo install --path . --locked
+eupho doctor
 ```
 
 Inspect a repository without mutating it:
 
 ```bash
-node dist/src/cli.js once --repo OWNER/REPOSITORY
+eupho once --repo OWNER/REPOSITORY
 ```
 
 Run strict GitHub policy diagnostics:
 
 ```bash
-EUPHO_DOCTOR_TOKEN=... node dist/src/cli.js doctor \
+EUPHO_DOCTOR_TOKEN=... eupho doctor \
   --repo OWNER/REPOSITORY \
   --host-config config/examples/host.yml
 ```
 
 Use `--json` with `doctor`, `once`, or `status` for machine-readable output.
+
+Keep Claude Code and Codex project instructions in sync with one source file:
+
+```bash
+# Default: CLAUDE.md -> AGENTS.md
+eupho instructions link
+
+# Reverse direction: AGENTS.md -> CLAUDE.md
+eupho instructions link --source claude
+```
+
+The source file must already exist. Eupho creates a relative symbolic link, is
+idempotent when the correct link already exists, and never overwrites an
+existing file, directory, or unexpected link.
 
 ## Configuration
 
@@ -69,6 +82,7 @@ The sample policy intentionally includes one narrow autonomous class (`agent:ris
 eupho doctor [--repo OWNER/REPO] [--config PATH] [--host-config PATH] [--json]
 eupho once --repo OWNER/REPO [--config PATH] [--host-config PATH] [--json]
 eupho status [--state-root PATH] [--host-config PATH] [--json]
+eupho instructions link [--source agents|claude] [--path PATH] [--json]
 eupho help
 ```
 
@@ -79,9 +93,9 @@ See [docs/architecture.md](docs/architecture.md) for the initial package map and
 ## Development
 
 ```bash
-npm run typecheck
-npm test
-npm run check
+cargo fmt --all --check
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo test --locked --all-targets
 ```
 
-The project intentionally starts with Node's built-in test runner and a small dependency surface. `yaml` is the only runtime package.
+Rust is the sole implementation language and runtime for the Eupho backend.

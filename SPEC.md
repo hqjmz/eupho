@@ -1035,6 +1035,9 @@ Executable notification hooks must resolve from an administrator-owned absolute 
 
 ## 18. Operator interface
 
+The dispatcher backend and command-line interface are implemented as one Rust
+binary. A deployed Eupho installation must not require a JavaScript runtime.
+
 The implementation should expose equivalent commands to:
 
 ```text
@@ -1050,9 +1053,19 @@ eupho accept-no-change <issue>
 eupho cancel <issue>       # graceful cancellation
 eupho recover <issue>      # explicit expired-lease recovery
 eupho doctor               # validate GitHub, Git, runners, labels, and policy
+eupho instructions link    # link CLAUDE.md to the canonical AGENTS.md
 ```
 
 Names are provisional. Commands must call the same state-transition functions used by GitHub comment controls rather than implementing a second workflow path.
+
+`eupho instructions link` is a local repository convenience and does not alter
+GitHub state. Its default source is `AGENTS.md`, producing the relative link
+`CLAUDE.md -> AGENTS.md`; `--source claude` produces the reverse link. The
+selected source must be an existing regular file. An already-correct link is a
+successful no-op. The command must refuse to replace any existing regular file,
+directory, dangling link, absolute link, escaping link, or link with an
+unexpected target. This conservative behavior prevents accidental loss of
+independently maintained instruction files.
 
 ## 19. Merge-policy profiles
 
